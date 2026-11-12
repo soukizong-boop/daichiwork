@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>我的今天</title>
+<style>
+/* 「我的今天」：菜单栏小程序里的窄窗口，手机和浏览器也能开。数据只有主机上那一份，这里只是看、检查、打勾、转交、发报告。
+   活是在 Claude 里干的：Claude 做完的进「待你检查」，人只点「没问题／不对」；不在电脑上做的事才由人打勾并写一句结果。
+   纪律：字号五档（11/12/13/15/20）・字重三档・圆角三档・一个强调色；行高 UI 1.45 */
+:root{--bg:#f4f1ea;--surface:#fff;--soft:#f3efe8;--ink:#141414;--ink-2:#4a4a4a;--ink-3:#7a7a7a;--line:rgba(20,20,20,.08);--line-dark:rgba(20,20,20,.16);--accent:#ee6a2d;--accent-soft:#fde9df;--ok:#1f9d55;--ok-soft:#e3f4ea;--bad:#c2372c;
+  --t-xs:11px;--t-sm:12px;--t-md:13px;--t-lg:15px;--t-xl:20px;--r-tile:10px;--r-card:14px;--r-pill:999px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font:var(--t-md)/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans","Segoe UI","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+header{padding:14px 16px 10px}
+header h1{font-size:var(--t-xl);line-height:1.25;font-weight:700}
+header p{font-size:var(--t-sm);color:var(--ink-3);margin-top:2px}
+header p b{color:var(--ink);font-weight:600}
+header p u{color:var(--bad);text-decoration:none;font-weight:600}
+nav{display:flex;gap:4px;padding:0 16px 8px}
+nav button{font-size:var(--t-sm);font-weight:600;padding:6px 12px;border-radius:var(--r-pill);color:var(--ink-2)}
+nav button.on{background:var(--ink);color:#fff}
+nav button i{font-style:normal;color:var(--accent);margin-left:3px}
+nav button.on i{color:#fff}
+main{flex:1;overflow-y:auto;padding:0 12px 12px}
+h2{font-size:var(--t-xs);font-weight:600;color:var(--ink-3);padding:12px 4px 6px;display:flex;justify-content:space-between;align-items:baseline}
+.list{background:var(--surface);border-radius:var(--r-card);overflow:hidden}
+.list.hot{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.row{display:grid;grid-template-columns:22px 1fr auto;gap:8px 10px;padding:10px 12px;border-top:1px solid var(--line);align-items:start}
+.row:first-child{border-top:0}
+.row.flat{grid-template-columns:1fr auto}
+.ck{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line-dark);margin-top:1px;display:grid;place-items:center;font-size:var(--t-sm);color:#fff;transition:background .15s,border-color .15s}
+.ck:hover{border-color:var(--accent)}
+.ck.on{background:var(--ok);border-color:var(--ok)}
+.tx{min-width:0;cursor:pointer}
+.tx b{display:block;font-weight:600;font-size:var(--t-md);overflow-wrap:anywhere}
+.tx small{display:block;font-size:var(--t-xs);color:var(--ink-3);margin-top:2px;overflow-wrap:anywhere}
+.tx .warn{color:var(--bad)}
+.done .tx{cursor:default}
+.done .tx b{font-weight:400;color:var(--ink-2)}
+.tag{font-size:var(--t-xs);font-weight:600;padding:2px 7px;border-radius:var(--r-pill);background:var(--soft);color:var(--ink-2);white-space:nowrap;margin-top:1px}
+.tag.hot{background:var(--accent-soft);color:var(--accent)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.wide{grid-column:2 / -1;min-width:0}
+.flat .wide{grid-column:1 / -1}
+.more{font-size:var(--t-sm);color:var(--ink-2);white-space:pre-wrap;overflow-wrap:anywhere}
+.more a{color:var(--accent);cursor:pointer;text-decoration:underline}
+.res{font-size:var(--t-sm);color:var(--ink);background:var(--soft);border-radius:var(--r-tile);padding:8px 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.res small{display:block;font-size:var(--t-xs);color:var(--ink-3);margin-bottom:2px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.acts input[type=text],.acts select,textarea{flex:1 1 140px;min-width:0;padding:7px 9px;border:1px solid var(--line-dark);border-radius:var(--r-tile);background:var(--surface);font-size:var(--t-sm)}
+.acts select{flex:0 1 110px}
+textarea{width:100%;min-height:56px;resize:vertical;display:block}
+.btn{font-size:var(--t-sm);font-weight:600;padding:6px 12px;border-radius:var(--r-tile);border:1px solid var(--line-dark);background:var(--surface);white-space:nowrap}
+.btn.solid{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.go{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:default}
+.link{font-size:var(--t-sm);color:var(--ink-3);padding:2px 4px}
+.link:hover{color:var(--ink)}
+.empty{padding:22px 12px;text-align:center;color:var(--ink-3);font-size:var(--t-sm)}
+.hint{font-size:var(--t-xs);color:var(--ink-3);padding:8px 4px 0}
+.line{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 12px;border-top:1px solid var(--line);font-size:var(--t-sm);overflow-wrap:anywhere}
+.line:first-child{border-top:0}
+.line.off,.offtx{color:var(--ink-3);text-decoration:line-through}
+.pad{padding:10px 12px}
+footer{padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;background:var(--bg)}
+footer span{flex:1;font-size:var(--t-xs);color:var(--ink-3);min-width:0}
+footer .btn.pulse{border-color:var(--accent);background:var(--accent);color:#fff}
+#toast{position:fixed;left:12px;right:12px;bottom:64px;background:var(--ink);color:#fff;font-size:var(--t-sm);padding:10px 12px;border-radius:var(--r-tile);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+form.key{padding:16px;display:grid;gap:10px}
+form.key input{padding:10px;border:1px solid var(--line-dark);border-radius:var(--r-tile);background:var(--surface)}
+</style>
+</head>
+<body>
+<header><h1 id="h-title">我的今天</h1><p id="h-sub">正在取…</p></header>
+<nav><button data-tab="today" class="on" type="button">要做</button><button data-tab="done" type="button">已完成</button><button data-tab="report" type="button">交接报告</button></nav>
+<main id="main"></main>
+<footer><span id="f-note"></span><button class="btn" id="f-report" type="button">今天的交接报告</button></footer>
+<div id="toast"></div>
+<script>
+const $ = s => document.querySelector(s);
+const NATIVE = !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.dadi);
+const post = m => { try { window.webkit.messageHandlers.dadi.postMessage(m); } catch {} };
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const linkify = s => esc(s).replace(/https?:\/\/[^\s<）)]+/g, u => `<a data-url="${u}">${u}</a>`);
+let KEY = window.DADI_KEY || ''; try { KEY = KEY || localStorage.getItem('dadiKey') || ''; } catch {}
+/* act＝哪一条正在填东西：{id, kind: done|reject|transfer, text, to}。rep＝交接报告页的状态 */
+const S = { d: null, tab: 'today', open: '', act: null, err: '', wantSend: false, sure: '', rep: { d: null, drop: new Set(), skip: new Set(), more: new Set(), note: '', preparing: false, sending: false, prepared: null, hist: '', talk: null } };
+const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 3200); };
+async function api(p, body) {
+  const r = await fetch(p, body === undefined ? { headers: { authorization: 'Bearer ' + KEY } } : { method: 'POST', headers: { authorization: 'Bearer ' + KEY, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(j.error || '没做成'), { status: r.status }); return j;
+}
+const md = d => { const m = /^\d{4}-(\d{2})-(\d{2})/.exec(d || ''); return m ? `${+m[1]}/${+m[2]}` : ''; };
+const hm = iso => { const d = new Date(iso); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const mins = m => (m >= 60 ? `${Math.floor(m / 60)} 小时${m % 60 ? ` ${m % 60} 分` : ''}` : `${m} 分`);
+const typing = () => { const a = document.activeElement; return !!a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName); };
+function render() {
+  const d = S.d;
+  if (!KEY) { $('#h-sub').textContent = '先填你的钥匙'; $('#main').innerHTML = `<form class="key" id="keyform"><input id="key" placeholder="dk_… 你的钥匙（只存在这台设备上）" autocomplete="off"><button class="btn solid" type="submit">进入</button></form>`; return; }
+  if (!d) { $('#h-sub').textContent = S.err || '正在取…'; $('#main').innerHTML = S.err ? `<div class="empty">${esc(S.err)}</div>` : ''; return; }
+  $('#h-title').textContent = `${d.me.name} 的今天`;
+  $('#h-sub').innerHTML = `${md(d.today)}　要做 <b>${d.counts.open}</b>${d.counts.review ? `　待检查 <b>${d.counts.review}</b>` : ''}${d.counts.overdue ? `　<u>逾期 ${d.counts.overdue}</u>` : ''}　今天做完 <b>${d.counts.doneToday}</b>`;
+  document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('on', b.dataset.tab === S.tab); if (b.dataset.tab === 'today') b.innerHTML = `要做${d.counts.review ? `<i>${d.counts.review}</i>` : ''}`; });
+  { const m = $('#main'), keep = m.dataset.tab === S.tab ? m.scrollTop : 0; m.innerHTML = S.tab === 'today' ? today(d) : S.tab === 'done' ? done(d) : report(d); m.dataset.tab = S.tab; m.scrollTop = S.top ? 0 : keep; S.top = false; }   /* 同一页重画不跳回顶上 */
+  $('#f-report').hidden = S.tab === 'report'; $('#f-report').classList.toggle('pulse', S.wantSend && !d.report);
+  $('#f-note').textContent = S.err ? S.err : d.report ? `今天的交接报告 ${hm(d.report.at)} 已发送` : '';
+  post({ type: 'count', open: d.counts.total != null ? d.counts.total : d.counts.open, overdue: d.counts.overdue });
+  S.rendAt = Date.now();
+  const f = document.querySelector('[data-focus]'); if (f) { f.focus(); const v = f.value; if (f.setSelectionRange && v) f.setSelectionRange(v.length, v.length); }
+}
+const meta = t => `${t.id} · ${esc(t.dept)}・${esc(t.category)}${t.due ? ` · 到期 ${md(t.due)}` : ''}${t.status === '进行中' ? ' · 进行中' : ''}`;
+function today(d) {
+  const A = S.act || {};
+  /* 待你检查：Claude 做完交上来的。人只做两件事：没问题／不对（写一句） */
+  const rev = t => `<div class="row flat"><div class="tx" data-open="${t.id}"><b>${esc(t.title)}</b><small>${meta(t)} · Claude ${hm(t.checkAt)} 交的</small></div><span class="tag hot">待检查</span>
+    <div class="wide res"><small>Claude 写的结果</small>${linkify(t.result) || '（没写）'}</div>
+    ${A.id === t.id && A.kind === 'reject' ? `<div class="wide acts"><input type="text" data-in="text" data-focus value="${esc(A.text || '')}" placeholder="哪里不对（一句话，Claude 会照这句重做）" maxlength="400"><button class="btn solid" data-do="reject" type="button">退回重做</button><button class="link" data-do="cancel" type="button">取消</button></div>`
+      : `<div class="wide acts"><button class="btn go" data-ok="${t.id}" type="button">没问题</button><button class="btn" data-act="reject" data-id="${t.id}" type="button">不对</button><span class="link">${t.canVerify ? '确认后会去后台核实' : ''}</span></div>`}</div>`;
+  const row = t => { const on = S.open === t.id, act = A.id === t.id ? A.kind : ''; return `<div class="row">
+    <button class="ck" data-ck="${t.id}" type="button" title="${t.ackOnly ? '知道了' : '做完了'}" aria-label="标记 ${t.id} 完成"></button>
+    <div class="tx" data-open="${t.id}"><b>${esc(t.title)}</b><small>${meta(t)}</small>${t.back ? `<small class="warn">后台显示还没做完，已重新打开。确实不用做，就再打一次勾</small>` : ''}${t.rejects ? `<small class="warn">检查没通过：${esc(t.why)}</small>` : ''}${t.from ? `<small>${esc(t.from.by)} 转来：${esc(t.from.reason)}</small>` : ''}</div>
+    <span class="tag${t.label === '急' || t.label === '今天' ? ' hot' : ''}">${esc(t.label)}</span>
+    ${act === 'done' ? `<div class="wide acts"><input type="text" data-in="text" data-focus value="${esc(A.text || '')}" placeholder="做了什么（一句话，写清对象）" maxlength="600"><button class="btn go" data-do="done" type="button">做完</button><button class="link" data-do="cancel" type="button">取消</button></div>` : ''}
+    ${act === 'transfer' ? `<div class="wide acts"><select data-in="to"><option value="">转给谁</option>${d.people.map(p => `<option value="${p.id}" ${A.to === p.id ? 'selected' : ''}>${esc(p.name)}${p.off ? '（今天休息）' : ''}</option>`).join('')}</select><input type="text" data-in="text" data-focus value="${esc(A.text || '')}" placeholder="原因（一句话）" maxlength="200"><button class="btn solid" data-do="transfer" type="button">转交</button><button class="link" data-do="cancel" type="button">取消</button></div>` : ''}
+    ${on && !act ? `${t.detail ? `<div class="wide more">${linkify(t.detail)}</div>` : ''}<div class="wide acts"><button class="btn solid" data-claude="${t.id}" type="button">让 Claude 做</button>${t.status === '待做' ? `<button class="btn" data-start="${t.id}" type="button">开始做</button>` : ''}${d.people.length ? `<button class="btn" data-act="transfer" data-id="${t.id}" type="button">转交</button>` : ''}${t.rule ? `<button class="btn" data-mute="${t.id}" type="button">不用再提</button>` : ''}<span class="link">${t.canVerify ? '做完后会去后台核实' : t.ackOnly ? '打勾＝知道了' : `${esc(t.by || t.source)} 派`}${t.transfers > 1 ? ` · 转过 ${t.transfers} 次` : ''}</span></div>` : ''}
+  </div>`; };
+  return `${d.review.length ? `<h2>待你检查 ${d.review.length} 件<span>Claude 做完了，看一下结果</span></h2><div class="list hot">${d.review.map(rev).join('')}</div><h2>要做 ${d.open.length} 件</h2>` : ''}
+    ${d.open.length ? `<div class="list">${d.open.map(row).join('')}</div>` : `<div class="list"><div class="empty">${d.review.length ? '其余没有要做的。' : '今天没有要做的。'}</div></div>`}
+    ${(d.cands || []).length ? `<h2>对话里提到要做的 ${d.cands.length} 件<span>接了才变成任务</span></h2><div class="list">${d.cands.map(c => `<div class="row flat"><div class="tx" style="cursor:default"><b style="font-weight:400">${esc(c.title)}</b><small>${esc(c.category)}${c.due ? ` · 期限 ${md(c.due)}` : ''}${c.to ? ` · 要 ${esc(c.to)} 做` : ''}</small></div><span></span><div class="wide acts"><button class="btn" data-cand="${c.id}" data-how="take" type="button">${c.to ? `接，派给 ${esc(c.to)}` : '接'}</button>${c.to ? `<button class="btn" data-cand="${c.id}" data-how="mine" type="button">我自己做</button>` : ''}<button class="link" data-cand="${c.id}" data-how="drop" type="button">不用</button></div></div>`).join('')}</div>` : ''}
+    ${d.reminders.length ? `<h2>今天的提醒</h2><div class="list">${d.reminders.map(r => `<div class="row flat"><div class="tx"><b>${esc(r.text)}</b></div><span class="tag">${r.at}</span></div>`).join('')}</div>` : ''}
+    ${d.pending.length ? `<h2>上次对话里没做完的 ${d.pending.length} 件<button class="link" data-dropall type="button">${S.sure === 'dropall' ? '再点一次：全部不用了' : '全部不用了'}</button></h2><div class="list">${d.pending.map((x, i) => `<div class="row flat"><div class="tx" style="cursor:default"><b style="font-weight:400">${esc(x)}</b></div><span></span><div class="wide acts"><button class="btn" data-pend="${i}" data-how="task" type="button">记成任务</button><button class="link" data-pend="${i}" data-how="drop" type="button">不用了</button></div></div>`).join('')}</div>` : ''}`;
+}
+function done(d) {
+  if (!d.done.length) return '<div class="list"><div class="empty">近 14 天还没有做完的记录。</div></div>';
+  return d.done.map(g => `<h2>${g.date === d.today ? '今天' : md(g.date)}　${g.items.length + g.talk.length} 件</h2>
+    ${g.items.length ? `<div class="list">${g.items.map(t => `<div class="row done"><button class="ck on" ${g.date === d.today && !t.auto ? `data-undo="${t.id}" title="点一下取消"` : 'disabled'} type="button">✓</button><div class="tx"><b>${esc(t.title)}</b><small>${t.id} · ${esc(t.category)} · ${hm(t.at)}${t.result && !t.auto ? ` · ${esc(t.result)}` : ''}</small></div>${t.auto ? '<span class="tag ok">自动结束</span>' : t.verify === 'ok' ? '<span class="tag ok">已核实</span>' : t.verify === 'pending' ? '<span class="tag">核实中</span>' : t.override ? '<span class="tag">按你说的算完成</span>' : t.checked ? '<span class="tag ok">检查过</span>' : '<span></span>'}</div>`).join('')}</div>` : ''}
+    ${g.talk.length ? `<p class="hint">和 Claude 对话里做完的 ${g.talk.length} 件（没挂在任务上）</p><div class="list">${g.talk.map(x => `<div class="line"><span>${esc(x.text)}</span><span style="color:var(--ink-3)">${hm(x.at)}</span></div>`).join('')}</div>` : ''}`).join('');
+}
+/* 今天的对话（精简版）：整理过才有清单；每段可以点「这段不发」。已经在主机上的（今天发过的）可以点开看、可以撤回 */
+function talksBlock(f, P) {
+  const R = S.rep, up = f.talks || [], isUp = s => up.some(x => x.session === s), local = P && P.talks ? P.talks : [];
+  const rows = [...local.map(t => ({ ...t, up: isUp(t.session) })), ...up.filter(x => !local.some(l => l.session === x.session)).map(t => ({ ...t, up: true }))];
+  if (!rows.length) return `<p class="hint">今天的对话（精简版）</p><div class="list"><div class="empty">${NATIVE ? (P ? '今天没有可发的对话。' : '先点第 1 步「整理今天的对话」，这里才会列出来。') : '这台设备上没有今天的对话。'}</div></div>`;
+  return `<p class="hint">今天的对话 ${rows.length} 段（精简版，只有文字）${local.length ? '。不想发的点「这段不发」' : ''}</p><div class="list">${rows.map(t => `<div class="row flat"><div class="tx" ${t.up ? `data-talk="${t.session}"` : 'style="cursor:default"'}><b style="font-weight:400" class="${R.skip.has(t.session) ? 'offtx' : ''}">${esc(t.title)}</b><small>你说了 ${t.turns} 句 · ${Math.max(1, Math.round(t.chars / 1000))} 千字${t.up ? ' · 已在主机上，点开看' : ''}</small></div>${t.up ? `<button class="link" data-talkdrop="${t.session}" type="button">撤回</button>` : `<button class="link" data-skip="${t.session}" type="button">${R.skip.has(t.session) ? '放回' : '这段不发'}</button>`}${R.talk && R.talk.session === t.session ? `<div class="wide more" style="max-height:260px;overflow:auto">${esc(R.talk.text)}</div>` : ''}</div>`).join('')}</div>`;
+}
+/* 交接报告：先看全文，可以去掉几条、补一句，确认了才发。来源写清楚 */
+function report(d) {
+  const R = S.rep, r = R.d; if (!r) return '<div class="empty">正在取报告…</div>';
+  const f = r.draft, P = R.prepared, lines = (l, kind, key) => { if (!l.length) return `<div class="list"><div class="empty">${kind}</div></div>`; const all = R.more.has(key) || l.length <= 6, show = all ? l : l.slice(0, 5); return `<div class="list">${show.map(x => `<div class="line${R.drop.has(x) ? ' off' : ''}"><span>${esc(x)}</span><button class="link" data-drop="${esc(x)}" type="button">${R.drop.has(x) ? '放回' : '去掉'}</button></div>`).join('')}${l.length > 6 ? `<div class="line"><button class="link" data-more="${key}" type="button" style="text-align:left">${all ? '收起' : `展开全部 ${l.length} 条`}</button><span></span></div>` : ''}</div>`; };
+  const past = r.history.filter(x => x.date !== d.today);
+  const sent = r.sent ? `<div class="list hot"><div class="pad"><b>今天 ${hm(r.sent.at)} 已发到公司 Mac mini</b><div class="more" style="margin-top:4px">做完 ${r.sent.done.length} 件・没做完 ${r.sent.pending.length} 件・学到 ${r.sent.learned} 条・对话 ${(r.sent.talks || []).length} 段・记忆和规则 ${(r.sent.backup || {}).files || 0} 个文件${r.sent.note ? `\n补充：${esc(r.sent.note)}` : ''}</div></div></div>` : '';
+  return `${sent}<p class="hint">这一包发四样，都来自这台电脑的 Claude：做完的任务、对话小结、今天的对话（精简版：你说的话和 Claude 回答的文字，不带文件内容和命令输出，密码遮掉）、记忆和规则的备份。</p>
+    ${NATIVE ? `<h2>第 1 步　整理今天的对话</h2><div class="list"><div class="pad acts"><button class="btn${P ? '' : ' solid'}" data-prepare type="button" ${R.preparing || R.sending ? 'disabled' : ''}>${R.preparing ? '正在整理，一两分钟…' : P ? '再整理一次' : '整理今天的对话'}</button><span class="link">${P ? `整理出小结 ${P.sent} 份・备份 ${P.up} 个文件有变化${P.failed ? `・${P.failed} 段没整理成` : ''}` : `已有小结 ${f.digests} 份`}</span></div>${P && P.hint ? `<div class="line"><span class="warn" style="color:var(--bad)">${esc(P.hint)}</span><span></span></div>` : ''}${P && P.files && P.files.length ? `<div class="line"><span style="color:var(--ink-3)">这次备份的：${P.files.slice(0, 8).map(x => esc(x.split('/').pop())).join('、')}${P.files.length > 8 ? ' 等' : ''}</span><span></span></div>` : ''}</div>` : `<p class="hint">这台设备没有装小助手：只能发主机上已经有的内容。要整理今天的对话，请在装了「接入」的电脑上发。</p>`}
+    <h2>${NATIVE ? '第 2 步　' : ''}看一下，再发<span>${r.sent ? `今天 ${hm(r.sent.at)} 发过，再发会覆盖` : '还没发'}</span></h2>
+    ${talksBlock(f, P)}
+    <p class="hint">今天做完的 ${f.done.length} 件</p>${lines(f.done, '今天还没有做完的记录。', 'done')}
+    ${f.waiting.length ? `<p class="hint">Claude 做完、等你检查的 ${f.waiting.length} 件（在「要做」里点「没问题」后才算做完）</p><div class="list">${f.waiting.map(x => `<div class="line"><span>${esc(x)}</span><span></span></div>`).join('')}</div>` : ''}
+    <p class="hint">没做完、明天接着做的 ${f.pending.length} 件</p>${lines(f.pending, '没有。', 'pending')}
+    ${f.learned.length ? `<p class="hint">今天学到、等批准的 ${f.learned.length} 条</p><div class="list">${(R.more.has('learned') || f.learned.length <= 6 ? f.learned : f.learned.slice(0, 5)).map(x => `<div class="line"><span>${esc(x)}</span><span></span></div>`).join('')}${f.learned.length > 6 ? `<div class="line"><button class="link" data-more="learned" type="button">${R.more.has('learned') ? '收起' : `展开全部 ${f.learned.length} 条`}</button><span></span></div>` : ''}</div>` : ''}
+    <p class="hint">工作时间 ${mins(f.minutes)}　记忆和规则已备份 ${f.backup.files} 个文件${f.backup.at ? `（${hm(f.backup.at)}）` : ''}</p>
+    <div class="pad" style="padding:10px 0"><textarea data-in="note" placeholder="补一句（可不写）：明天要注意的、要别人知道的" maxlength="1000">${esc(R.note)}</textarea></div>
+    <div class="acts"><button class="btn go" data-sendreport type="button" ${R.sending || R.preparing ? 'disabled' : ''}>${R.sending ? '正在发…' : R.preparing ? '等整理完' : '确认发送'}</button><span class="link">发给公司 Mac mini，只有你和 Souki 能看到</span></div>
+    ${past.length ? `<h2>以前发过的</h2><div class="list">${past.map(x => `<div class="row flat"><div class="tx" data-hist="${x.date}"><b>${md(x.date)}　做完 ${x.done.length}・还差 ${x.pending.length}</b><small>${hm(x.at)} 发的 · ${mins(x.minutes || 0)}${(x.talks || []).length ? ` · 对话 ${x.talks.length} 段` : ''}</small></div><span></span>${R.hist === x.date ? `<div class="wide more">${esc([x.done.length ? '做完：\n' + x.done.map(y => '・' + y).join('\n') : '', x.pending.length ? '没做完：\n' + x.pending.map(y => '・' + y).join('\n') : '', (x.learnedTitles || []).length ? '学到：\n' + x.learnedTitles.map(y => '・' + y).join('\n') : '', x.note ? '补充：' + x.note : ''].filter(Boolean).join('\n\n'))}</div>` : ''}</div>`).join('')}</div>` : ''}`;
+}
+async function load(quiet) {
+  if (!KEY) return render();
+  try { const fresh = await api('/me/state'); if (quiet && (typing() || S.act || S.lock)) { post({ type: 'count', open: fresh.counts.total != null ? fresh.counts.total : fresh.counts.open, overdue: fresh.counts.overdue }); return; }   /* 正在打字：也不自动跳到报告页 */   /* 正在填东西、正在提交：不重画也不换数据，免得字被冲掉、点到别的条 */
+    S.d = fresh; S.err = ''; if (S.tab === 'report' && !quiet) S.rep.d = await api('/me/report'); }
+  catch (e) { S.err = e.status === 401 ? '钥匙不对或已停用' : '连不上公司 Mac mini'; if (e.status === 401) { S.d = null; if (!window.DADI_KEY) { KEY = ''; try { localStorage.removeItem('dadiKey'); } catch {} } } post({ type: 'count', open: -1, overdue: 0 }); }
+  render();
+  if (S.d) autoShow(S.d);
+}
+async function openReport() { S.tab = 'report'; S.act = null; S.rep.d = null; render(); try { S.rep.d = await api('/me/report'); } catch (e) { toast(e.message); } render(); }
+/* 到了早上、下班的时间：让菜单栏小程序自己弹出来一次（一天各一次；今天的报告发过了就不再弹下班那次） */
+function autoShow(d) {
+  if (!NATIVE || !d.prompt || d.prompt.on === false) return;
+  const n = new Date(), now = n.getHours() * 60 + n.getMinutes(), of = s => { const m = /^(\d{1,2}):(\d{2})$/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : 1e9; };
+  const get = k => { try { return localStorage.getItem(k); } catch { return null; } }, set = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  if (now >= of(d.prompt.evening)) { if (get('eDay') !== d.today && !d.report) { set('eDay', d.today); S.wantSend = true; openReport(); post({ type: 'show', why: 'evening' }); } }
+  else if (now >= of(d.prompt.morning) && get('mDay') !== d.today) { set('mDay', d.today); S.tab = 'today'; render(); post({ type: 'show', why: 'morning' }); }
+}
+window.dadiTick = () => load(true);
+window.dadiPrepared = async text => { const R = S.rep; R.preparing = false; try { const j = JSON.parse(String(text || '').trim().split('\n').pop()); if (j.busy) { render(); return toast('上一步还在跑，等它跑完再点'); } R.prepared = j; } catch { R.prepared = { sent: 0, up: 0, failed: 0, hint: '没跑起来：这台电脑上找不到小助手（~/.dadi-brain/dadi）', files: [] }; } try { R.d = await api('/me/report'); S.d = await api('/me/state'); } catch {} render(); toast(R.prepared.hint ? '有对话没整理成，看第 1 步里的说明' : '整理好了，看一下再点「确认发送」'); };
+async function finishReport(tk) { const R = S.rep; try { const r = await api('/me/report', { note: R.note, drop: [...R.drop], client: R.prepared ? { ...R.prepared, talksSent: tk ? (tk.sent || []).length : 0 } : undefined }); S.d = r.state || S.d; R.drop = new Set(); R.skip = new Set(); R.note = ''; R.sending = false; S.wantSend = false; R.d = await api('/me/report'); S.top = true; render(); toast(`发好了：做完 ${r.report.done.length} 件・还差 ${r.report.pending.length} 件・对话 ${(r.report.talks || []).length} 段${tk && tk.failed ? `（${tk.failed} 段没发成）` : ''}${tk && tk.late ? '（对话上传没有回音：小程序可能是旧的）' : ''}`); } catch (e) { R.sending = false; render(); toast(e.message || '没发成'); } }
+window.dadiTalksDone = text => { let tk = {}; try { tk = JSON.parse(String(text || '').trim().split('\n').pop()); } catch {} if (tk.busy) { clearTimeout(S.rep.t2); S.rep.sending = false; render(); return toast('上一步还在跑，等它跑完再点「确认发送」'); } clearTimeout(S.rep.t2); if (S.rep.sending) finishReport(tk); };
+window.dadiSendDone = text => { toast(String(text || '').split('\n')[0]); load(); };
+document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.in; if (!k) return; if (k === 'note') S.rep.note = e.target.value; else if (S.act) S.act[k] = e.target.value; });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.in === 'text' && !e.isComposing) { const b = e.target.parentElement.querySelector('[data-do]:not([data-do=cancel])'); if (b) b.click(); } });
+const ACTS = '.ck,[data-ok],[data-do],[data-mute],[data-dropall],[data-pend],[data-cand],[data-talkdrop],[data-sendreport],[data-prepare],[data-start],[data-undo]';
+document.addEventListener('click', async e => {
+  if (S.lock) return; if (e.target.closest(ACTS) && Date.now() - (S.rendAt || 0) < 400) return;
+  S.lock = true; try { await act(e); } finally { S.lock = false; }
+});
+async function act(e) {
+  const a = e.target.closest('a[data-url]'); if (a) { e.preventDefault(); return NATIVE ? post({ type: 'open', url: a.dataset.url }) : window.open(a.dataset.url, '_blank'); }
+  const b = e.target.closest('button,[data-open],[data-hist],[data-talk]'); if (!b) return; const ds = b.dataset, set = r => { S.d = r.state || S.d; };
+  if (S.sure && ds.dropall == null && ds.talkdrop == null && ds.mute == null) S.sure = '';
+  try {
+    if (b.id === 'f-report') return openReport();
+    if (ds.tab) { if (ds.tab === 'report') return openReport(); S.tab = ds.tab; S.open = ''; S.act = null; return render(); }
+    if (ds.open) { if (S.act) return; S.open = S.open === ds.open ? '' : ds.open; return render(); }
+    if (ds.hist) { S.rep.hist = S.rep.hist === ds.hist ? '' : ds.hist; return render(); }
+    if (ds.act) { S.act = { id: ds.id, kind: ds.act, text: '', to: '' }; return render(); }
+    if (ds.do === 'cancel') { S.act = null; return render(); }
+    if (ds.ck) { const t = S.d.open.find(x => x.id === ds.ck); set(await api('/me/task', { id: ds.ck, action: 'done' })); S.open = ''; render(); return toast(t && t.ackOnly ? '知道了，有新情况再提醒' : '做完了，记下了'); }   /* 点一下就做完，不用写字 */
+    if (ds.mute) { if (S.sure !== 'mu' + ds.mute) { S.sure = 'mu' + ds.mute; S.sureAt = Date.now(); b.textContent = '再点一次：以后不再提这件事'; return; } if (Date.now() - S.sureAt < 600) return; S.sure = ''; set(await api('/me/task', { id: ds.mute, action: 'mute' })); S.open = ''; render(); return toast('以后不再提了'); }
+    if (ds.do === 'done') { const A = S.act; if (!String(A.text || '').trim()) return toast('写一句做了什么'); set(await api('/me/task', { id: A.id, action: 'done', result: A.text })); S.act = null; S.open = ''; render(); return toast('做完了，记下了'); }
+    if (ds.ok) { set(await api('/me/task', { id: ds.ok, action: 'ok' })); render(); return toast('确认了，算完成'); }
+    if (ds.do === 'reject') { const A = S.act; if (!String(A.text || '').trim()) return toast('写一句哪里不对'); set(await api('/me/task', { id: A.id, action: 'reject', reason: A.text })); S.act = null; render(); return toast('退回去了；这句会成为一条等批准的经验'); }
+    if (ds.do === 'transfer') { const A = S.act; if (!A.to) return toast('选转给谁'); if (!String(A.text || '').trim()) return toast('写一句原因'); const who = (S.d.people.find(p => p.id === A.to) || {}).name; set(await api('/me/task', { id: A.id, action: 'transfer', to: A.to, reason: A.text })); S.act = null; S.open = ''; render(); return toast(`转给 ${who} 了，对方会收到通知`); }
+    if (ds.undo) { set(await api('/me/task', { id: ds.undo, action: 'undo' })); S.tab = 'today'; render(); return toast('放回「要做」了'); }
+    if (ds.start) { set(await api('/me/task', { id: ds.start, action: 'start' })); return render(); }
+    if (ds.claude) { const t = S.d.open.find(x => x.id === ds.claude), text = `领任务 ${t.id}（${t.title}），照固定做法做。做完交给我检查。`; if (NATIVE) post({ type: 'claude', text }); else { try { await navigator.clipboard.writeText(text); } catch {} } return toast('这句话已复制：在 Claude 里粘贴发送'); }
+    if (ds.cand != null) { const r = await api('/me/cand', { id: ds.cand, action: ds.how === 'drop' ? 'drop' : 'take', to: ds.how === 'mine' ? S.d.me.id : undefined }); set(r); render(); return toast(ds.how === 'drop' ? '不提了' : `变成任务 ${r.task} 了`); }
+    if (ds.pend != null) { const text = S.d.pending[+ds.pend]; const r = await api('/me/pending', { text, action: ds.how }); set(r); render(); return toast(ds.how === 'task' ? `记成任务 ${r.task} 了` : '不再提了'); }
+    if (ds.dropall != null) { if (S.sure !== 'dropall') { S.sure = 'dropall'; S.sureAt = Date.now(); return render(); } if (Date.now() - S.sureAt < 600) return; S.sure = ''; const r = await api('/me/pending', { action: 'dropall' }); set(r); render(); return toast(`${r.dropped} 条都不再提了`); }
+    if (ds.drop != null) { const R = S.rep; R.drop.has(ds.drop) ? R.drop.delete(ds.drop) : R.drop.add(ds.drop); return render(); }
+    if (ds.prepare != null) { S.rep.preparing = true; render(); clearTimeout(S.rep.t); S.rep.t = setTimeout(() => { if (S.rep.preparing) window.dadiPrepared(JSON.stringify({ sent: 0, up: 0, failed: 0, files: [], hint: '等了 5 分钟没有回音：菜单栏小程序可能是旧的，请再双击一次「接入」安装程序。' })); }, 300000); return post({ type: 'prepare' }); }
+    if (ds.sendreport != null) { const R = S.rep, P = R.prepared; if (NATIVE && P && (P.talks || []).some(t => !R.skip.has(t.session))) { R.sending = true; render(); clearTimeout(R.t2); R.t2 = setTimeout(() => { if (R.sending) window.dadiTalksDone('{"sent":[],"failed":0,"late":1}'); }, 180000); return post({ type: 'talks', skip: [...R.skip] }); } return finishReport(null); }
+    if (ds.more != null) { const R = S.rep; R.more.has(ds.more) ? R.more.delete(ds.more) : R.more.add(ds.more); return render(); }
+    if (ds.skip != null) { const R = S.rep; R.skip.has(ds.skip) ? R.skip.delete(ds.skip) : R.skip.add(ds.skip); return render(); }
+    if (ds.talk != null) { const R = S.rep; if (R.talk && R.talk.session === ds.talk) { R.talk = null; return render(); } R.talk = await api(`/me/talk?date=${S.d.today}&session=${encodeURIComponent(ds.talk)}`); return render(); }
+    if (ds.talkdrop != null) { if (S.sure !== 'td' + ds.talkdrop) { S.sure = 'td' + ds.talkdrop; S.sureAt = Date.now(); b.textContent = '再点一次：从主机上删掉'; return; } if (Date.now() - S.sureAt < 600) return; S.sure = ''; await api('/me/talk', { action: 'drop', date: S.d.today, session: ds.talkdrop }); S.rep.d = await api('/me/report'); render(); return toast('这段对话已从主机上删掉'); }
+  } catch (err) { if (err.status === 409) { try { S.d = await api('/me/state'); } catch {} } render(); toast(err.message || '没做成'); }
+}
+document.addEventListener('submit', e => { e.preventDefault(); const v = ($('#key') || {}).value || ''; if (!/^dk_/.test(v.trim())) return toast('钥匙是 dk_ 开头的一串'); KEY = v.trim(); try { localStorage.setItem('dadiKey', KEY); } catch {} load(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });
+setInterval(() => load(true), 30000);
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "port": 8850,
+  "workdir": "~/Desktop",
+  "chrome": false,
+  "listen": []
+}

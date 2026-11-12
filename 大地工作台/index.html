@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>大地工作台</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<canvas id="cv" aria-label="办公室场景"></canvas>
+<div class="app" id="app" data-tab="office">
+  <header class="bar">
+    <div class="pill brand"><b>大地工作台</b><span class="lights" id="lights"></span></div>
+    <div class="pill auto"><span id="auto"></span><button id="refresh" type="button">刷新</button></div>
+  </header>
+  <div class="pmenu" id="pmenu" hidden></div>
+  <div class="shade" id="shade"></div>
+
+  <section class="panel home" id="home" aria-label="汇总">
+    <div class="phead" id="h-head"></div>
+    <div class="pbody" id="h-body"></div>
+    <form class="dispatch" id="d-form" hidden>
+      <div class="drow">
+        <select id="d-who" aria-label="负责人"></select>
+        <select id="d-sec" aria-label="板块"></select>
+        <input id="d-due" type="date" aria-label="截止日">
+      </div>
+      <input id="d-title" type="text" placeholder="任务：一句话写清楚要做什么" autocomplete="off" aria-label="任务">
+      <input id="d-detail" type="text" placeholder="补充说明（可不填）" autocomplete="off" aria-label="补充说明">
+      <div class="drow">
+        <label><input type="checkbox" id="d-notify" checked> 同时在 Slack 频道里说一声</label>
+        <button type="submit" id="d-send">派出</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel drawer slack" id="slack" aria-label="Slack">
+    <div class="phead" id="s-head"></div>
+    <div class="pbody" id="s-body"></div>
+    <div class="slash" id="s-mention" hidden></div>
+    <form class="composer" id="s-form" hidden>
+      <textarea id="s-in" rows="1" autocomplete="off" aria-label="发到 Slack 的消息"></textarea>
+      <button type="button" id="s-att" class="att" aria-label="上传图片或文件" title="上传图片或文件（也可以拖进来、粘贴截图）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.5l-8.5 8.5a6 6 0 0 1-8.5-8.5l9-9a4 4 0 0 1 5.7 5.7l-9 9a2 2 0 0 1-2.8-2.8l8-8"/></svg></button>
+      <input type="file" id="s-file" multiple hidden>
+      <button type="submit" id="s-send">发送</button>
+    </form>
+    <div class="atts" id="s-atts" hidden></div>
+    <p class="hint" id="s-hint" hidden></p>
+  </section>
+
+  <section class="panel drawer tasks" id="tasks" aria-label="硬盘">
+    <div class="phead" id="t-head"></div>
+    <div class="pbody" id="t-body"></div>
+  </section>
+
+  <section class="panel drawer admin" id="admin" aria-label="网站后台">
+    <div class="phead" id="a-head"></div>
+    <div class="pbody" id="a-body"></div>
+  </section>
+  <section class="panel drawer sys" id="sys" aria-label="系统">
+    <div class="phead" id="y-head"></div>
+    <div class="pbody" id="y-body"></div>
+  </section>
+  <section class="panel drawer hist" id="hist" aria-label="历史对话">
+    <div class="phead" id="g-head"></div>
+    <div class="pbody" id="g-body"></div>
+  </section>
+  <section class="panel drawer tpl" id="tpl" aria-label="模版">
+    <div class="phead" id="p-head"></div>
+    <div class="pbody" id="p-body"></div>
+  </section>
+  <section class="panel drawer work" id="work" aria-label="任务">
+    <div class="phead" id="w-head"></div>
+    <div class="pbody" id="w-body"></div>
+  </section>
+  <aside class="panel run" id="run" aria-label="任务进行">
+    <div class="phead" id="r-head"></div>
+    <div class="pbody" id="r-body"></div>
+  </aside>
+
+  <div class="qmenu" id="qmenu" hidden></div>
+  <button class="fab" id="fab" type="button" aria-label="ask ala"><span class="a">a</span><small>ask ala</small></button>
+  <section class="panel claude" id="claude" aria-label="Claude Code">
+    <div class="phead" id="c-head"></div>
+    <div class="copts" id="c-opts" hidden></div>
+    <div class="pbody clog" id="c-log"></div>
+    <div class="cstatus" id="c-status" aria-live="polite"></div>
+    <div class="slash" id="c-slash" hidden></div>
+    <form class="composer" id="c-form">
+      <textarea id="c-in" rows="1" autocomplete="off" aria-label="对 Claude Code 说的话" placeholder="对 Claude Code 说：查后台、查消息、找文件、起草、派任务…"></textarea>
+      <button type="button" id="c-att" class="att" aria-label="上传图片或文件" title="上传图片或文件（也可以拖进来、粘贴截图）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.5l-8.5 8.5a6 6 0 0 1-8.5-8.5l9-9a4 4 0 0 1 5.7 5.7l-9 9a2 2 0 0 1-2.8-2.8l8-8"/></svg></button>
+      <input type="file" id="c-file" multiple hidden>
+      <button type="submit" id="c-send">发送</button>
+    </form>
+    <div class="atts" id="c-atts" hidden></div>
+    <div class="queue" id="c-queue" hidden></div>
+    <div class="chips" id="c-chips"></div>
+  </section>
+
+  <aside class="rail" id="rail" aria-label="导航">
+    <button class="logo" data-tab="office" type="button" aria-label="回到办公室">a</button>
+    <nav id="tabs" aria-label="页签"></nav>
+    <button class="me" id="who-btn" type="button" aria-haspopup="true"></button>
+  </aside>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
